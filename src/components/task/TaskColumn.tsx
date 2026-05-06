@@ -2,13 +2,23 @@ import { EmptyState } from "../ui/EmptyState";
 import { TaskCard } from "./TaskCard";
 import type { Task, TaskStatus } from "../../types/task";
 
-interface TaskColumnProps {
+export interface TaskColumnProps {
+  onDeleteTask: (taskId: string) => void;
+  onEditTask: (task: Task) => void;
+  onStatusChange: (taskId: string, status: TaskStatus) => void;
   title: string;
   status: TaskStatus;
   tasks: Task[];
 }
 
-export function TaskColumn({ title, status, tasks }: TaskColumnProps) {
+export function TaskColumn({
+  onDeleteTask,
+  onEditTask,
+  onStatusChange,
+  title,
+  status,
+  tasks,
+}: TaskColumnProps) {
   const columnTasks = tasks.filter((task) => task.status === status);
 
   return (
@@ -22,7 +32,15 @@ export function TaskColumn({ title, status, tasks }: TaskColumnProps) {
 
       <div className="space-y-3">
         {columnTasks.length > 0 ? (
-          columnTasks.map((task) => <TaskCard key={task.id} task={task} />)
+          columnTasks.map((task) => (
+            <TaskCard
+              key={task.id}
+              onDelete={onDeleteTask}
+              onEdit={onEditTask}
+              onStatusChange={onStatusChange}
+              task={task}
+            />
+          ))
         ) : (
           <EmptyState title="No tasks yet" description="New tasks will appear here." />
         )}

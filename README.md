@@ -11,11 +11,24 @@ This project is intentionally a foundation, not a fully completed task app yet. 
 - Tasks grouped by status
 - Mock task data
 - localStorage task persistence
+- Basic task CRUD
+- Change task status
+- Search tasks by title
+- Filter tasks by status and priority
+- Sort tasks by due date
 - Basic app routing
 - Sidebar navigation with active route state
 - Settings placeholder page
 - Reusable UI components
 - Responsive-friendly layout
+
+## Project Status
+
+- Phase 1: Basic React + Tailwind - completed
+- Phase 2: State + CRUD - completed
+- Phase 3: Stronger TypeScript - completed
+- Phase 4: Filter / Search / Sort - completed
+- Phase 5 and later - prepared for future improvements
 
 ## Current Pages
 
@@ -93,14 +106,6 @@ pnpm preview
 
 The structure is prepared for adding:
 
-- Add task
-- Edit task
-- Delete task
-- Change task status
-- Search tasks
-- Filter by status
-- Filter by priority
-- Sort by due date or priority
 - Dark mode
 - Firebase or mock API integration
 - Drag-and-drop Kanban

@@ -9,10 +9,16 @@ import {
 
 const summaryCardClasses = "min-h-32";
 
+interface DashboardSummary {
+  label: string;
+  value: number;
+  detail: string;
+}
+
 export function DashboardPage() {
   const { tasks } = useTasks();
 
-  const summaries = [
+  const summaries: DashboardSummary[] = [
     { label: "Total Tasks", value: getTotalTasks(tasks), detail: "All tracked tasks" },
     { label: "Completed", value: getCompletedTasks(tasks), detail: "Tasks marked done" },
     { label: "Pending", value: getPendingTasks(tasks), detail: "Todo or in progress" },

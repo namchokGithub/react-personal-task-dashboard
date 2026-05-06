@@ -1,4 +1,4 @@
-import type { Task } from "../types/task";
+import type { Task, TaskFilters, TaskSort } from "../types/task";
 
 export function getTotalTasks(tasks: Task[]): number {
   return tasks.length;
@@ -29,4 +29,33 @@ export function getUpcomingDueTasks(tasks: Task[]): number {
 
     return dueDate >= today && dueDate <= nextWeek;
   }).length;
+}
+
+function getDueDateTime(task: Task): number {
+  if (!task.dueDate) {
+    return Number.POSITIVE_INFINITY;
+  }
+
+  return new Date(task.dueDate).getTime();
+}
+
+export function filterAndSortTasks(tasks: Task[], filters: TaskFilters, sort: TaskSort): Task[] {
+  const normalizedSearch = filters.search.trim().toLowerCase();
+
+  const filteredTasks = tasks.filter((task) => {
+    const matchesSearch =
+      normalizedSearch.length === 0 || task.title.toLowerCase().includes(normalizedSearch);
+    const matchesStatus = filters.status === "all" || task.status === filters.status;
+    const matchesPriority = filters.priority === "all" || task.priority === filters.priority;
+
+    return matchesSearch && matchesStatus && matchesPriority;
+  });
+
+  return [...filteredTasks].sort((firstTask, secondTask) => {
+    const firstDueDate = getDueDateTime(firstTask);
+    const secondDueDate = getDueDateTime(secondTask);
+    const directionMultiplier = sort.direction === "asc" ? 1 : -1;
+
+    return (firstDueDate - secondDueDate) * directionMultiplier;
+  });
 }
