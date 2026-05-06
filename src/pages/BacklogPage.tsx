@@ -11,6 +11,7 @@ export function BacklogPage() {
   const { deleteTask, error, isLoading, restoreTask, tasks } = useTasks();
   const { prioritySettings } = usePrioritySettings();
   const [taskToDelete, setTaskToDelete] = useState<Task | undefined>();
+  const [taskToRestore, setTaskToRestore] = useState<Task | undefined>();
   const backlogTasks = tasks.filter((task) => task.status === "backlog");
 
   async function confirmDeleteTask() {
@@ -20,6 +21,15 @@ export function BacklogPage() {
 
     await deleteTask(taskToDelete.id);
     setTaskToDelete(undefined);
+  }
+
+  async function confirmRestoreTask() {
+    if (!taskToRestore) {
+      return;
+    }
+
+    await restoreTask(taskToRestore.id);
+    setTaskToRestore(undefined);
   }
 
   return (
@@ -64,7 +74,7 @@ export function BacklogPage() {
                 </div>
 
                 <div className="grid gap-2 sm:grid-cols-2 md:flex md:flex-row">
-                  <Button onClick={() => restoreTask(task.id)} variant="secondary">
+                  <Button onClick={() => setTaskToRestore(task)} variant="secondary">
                     Restore
                   </Button>
                   <Button
@@ -98,6 +108,19 @@ export function BacklogPage() {
         onCancel={() => setTaskToDelete(undefined)}
         onConfirm={confirmDeleteTask}
         title="Delete this task permanently?"
+      />
+
+      <ConfirmDialog
+        confirmLabel="Restore task"
+        description={
+          taskToRestore
+            ? `This will move "${taskToRestore.title}" back to the active board as a Todo task.`
+            : ""
+        }
+        isOpen={Boolean(taskToRestore)}
+        onCancel={() => setTaskToRestore(undefined)}
+        onConfirm={confirmRestoreTask}
+        title="Restore this task?"
       />
     </div>
   );

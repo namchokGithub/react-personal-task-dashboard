@@ -26,10 +26,10 @@ export function ConfirmDialog({
   return (
     <div
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 px-4 py-4 dark:bg-slate-950/70 sm:items-center sm:py-6"
+      className="modal-overlay-enter fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 px-4 py-4 dark:bg-slate-950/70 sm:items-center sm:py-6"
       role="dialog"
     >
-      <div className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-5 shadow-xl dark:border-slate-800 dark:bg-slate-900">
+      <div className="modal-panel-enter w-full max-w-md rounded-lg border border-slate-200 bg-white p-5 shadow-xl dark:border-slate-800 dark:bg-slate-900">
         <div>
           <h2 className="text-base font-semibold text-slate-950 dark:text-slate-50">{title}</h2>
           <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">

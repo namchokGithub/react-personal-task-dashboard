@@ -33,6 +33,7 @@ export function TasksPage() {
   } = useTasks();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | undefined>();
+  const [taskToArchive, setTaskToArchive] = useState<Task | undefined>();
   const [pendingFormValues, setPendingFormValues] = useState<UpdateTaskInput | undefined>();
   const [filters, setFilters] = useState<TaskFilters>(defaultFilters);
   const [sort, setSort] = useState<TaskSort>(defaultSort);
@@ -78,6 +79,23 @@ export function TasksPage() {
 
   function cancelSaveTask() {
     setPendingFormValues(undefined);
+  }
+
+  function requestArchiveTask(taskId: string) {
+    const selectedTask = tasks.find((task) => task.id === taskId);
+
+    if (selectedTask) {
+      setTaskToArchive(selectedTask);
+    }
+  }
+
+  async function confirmArchiveTask() {
+    if (!taskToArchive) {
+      return;
+    }
+
+    await archiveTask(taskToArchive.id);
+    setTaskToArchive(undefined);
   }
 
   function resetFilters() {
@@ -149,7 +167,7 @@ export function TasksPage() {
         />
       ) : (
         <KanbanBoard
-          onArchiveTask={archiveTask}
+          onArchiveTask={requestArchiveTask}
           onEditTask={openEditForm}
           onStatusChange={changeTaskStatus}
           tasks={visibleTasks}
@@ -167,6 +185,19 @@ export function TasksPage() {
         onCancel={cancelSaveTask}
         onConfirm={confirmSaveTask}
         title={editingTask ? "Save task changes?" : "Add this task?"}
+      />
+
+      <ConfirmDialog
+        confirmLabel="Move to backlog"
+        description={
+          taskToArchive
+            ? `This will move "${taskToArchive.title}" out of the active board. You can restore it from the backlog later.`
+            : ""
+        }
+        isOpen={Boolean(taskToArchive)}
+        onCancel={() => setTaskToArchive(undefined)}
+        onConfirm={confirmArchiveTask}
+        title="Move this task to backlog?"
       />
     </div>
   );

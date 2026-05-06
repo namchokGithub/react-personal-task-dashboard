@@ -27,6 +27,7 @@ This project is intentionally a foundation, not a fully completed task app yet. 
 - Empty states for active tasks, filtered results, board columns, and backlog
 - Hover and transition states for shared UI controls, cards, and board columns
 - Configurable priority labels and badge colors
+- Light modal animation with reduced-motion support
 - Settings page for appearance and priority preferences
 - Reusable UI components
 - Responsive desktop and mobile layout
@@ -234,8 +235,9 @@ Improve the interface and interaction details with Tailwind CSS.
 - ~~Hover / transition states~~
 - ~~Empty state~~
 - ~~Priority-based badge colors~~
-- Light modal animation
+- ~~Light modal animation~~
 - Better loading and error states
+- Snack bar
 
 ---
 
