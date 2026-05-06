@@ -6,6 +6,8 @@ import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { usePrioritySettings } from "../hooks/usePrioritySettings";
 import { useTasks } from "../hooks/useTasks";
 import type { Task } from "../types/task";
+import { ToastContainer } from "../components/ui/ToastContainer";
+import { useToast } from "../hooks/useToast";
 
 export function BacklogPage() {
   const { deleteTask, error, isLoading, restoreTask, tasks } = useTasks();
@@ -13,6 +15,7 @@ export function BacklogPage() {
   const [taskToDelete, setTaskToDelete] = useState<Task | undefined>();
   const [taskToRestore, setTaskToRestore] = useState<Task | undefined>();
   const backlogTasks = tasks.filter((task) => task.status === "backlog");
+  const { toasts, showToast, removeToast } = useToast();
 
   async function confirmDeleteTask() {
     if (!taskToDelete) {
@@ -21,6 +24,10 @@ export function BacklogPage() {
 
     await deleteTask(taskToDelete.id);
     setTaskToDelete(undefined);
+    showToast({
+      type: "success",
+      title: "Task deleted permanently",
+    });
   }
 
   async function confirmRestoreTask() {
@@ -30,14 +37,21 @@ export function BacklogPage() {
 
     await restoreTask(taskToRestore.id);
     setTaskToRestore(undefined);
+    showToast({
+      type: "success",
+      title: "Task restored",
+    });
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold text-slate-950 dark:text-slate-50">Backlog</h2>
+        <h2 className="text-xl font-semibold text-slate-950 dark:text-slate-50">
+          Backlog
+        </h2>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Tasks moved out of the active board stay here until you restore or delete them.
+          Tasks moved out of the active board stay here until you restore or
+          delete them.
         </p>
       </div>
 
@@ -74,14 +88,15 @@ export function BacklogPage() {
                 </div>
 
                 <div className="grid gap-2 sm:grid-cols-2 md:flex md:flex-row">
-                  <Button onClick={() => setTaskToRestore(task)} variant="secondary">
+                  <Button
+                    onClick={() => setTaskToRestore(task)}
+                    variant="secondary">
                     Restore
                   </Button>
                   <Button
                     className="text-rose-600 hover:text-rose-700"
                     onClick={() => setTaskToDelete(task)}
-                    variant="ghost"
-                  >
+                    variant="ghost">
                     Delete permanently
                   </Button>
                 </div>
@@ -122,6 +137,7 @@ export function BacklogPage() {
         onConfirm={confirmRestoreTask}
         title="Restore this task?"
       />
+      <ToastContainer toasts={toasts} onClose={removeToast} />
     </div>
   );
 }

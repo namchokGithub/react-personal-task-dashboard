@@ -6,8 +6,15 @@ import { Button } from "../components/ui/Button";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { EmptyState } from "../components/ui/EmptyState";
 import { useTasks } from "../hooks/useTasks";
-import type { Task, TaskFilters, TaskSort, UpdateTaskInput } from "../types/task";
+import type {
+  Task,
+  TaskFilters,
+  TaskSort,
+  UpdateTaskInput,
+} from "../types/task";
 import { filterAndSortTasks } from "../utils/taskUtils";
+import { ToastContainer } from "../components/ui/ToastContainer";
+import { useToast } from "../hooks/useToast";
 
 const defaultFilters: TaskFilters = {
   search: "",
@@ -21,6 +28,7 @@ const defaultSort: TaskSort = {
 };
 
 export function TasksPage() {
+  const { toasts, showToast, removeToast } = useToast();
   const {
     addTask,
     archiveAllTasks,
@@ -34,13 +42,17 @@ export function TasksPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | undefined>();
   const [taskToArchive, setTaskToArchive] = useState<Task | undefined>();
-  const [pendingFormValues, setPendingFormValues] = useState<UpdateTaskInput | undefined>();
+  const [pendingFormValues, setPendingFormValues] = useState<
+    UpdateTaskInput | undefined
+  >();
   const [filters, setFilters] = useState<TaskFilters>(defaultFilters);
   const [sort, setSort] = useState<TaskSort>(defaultSort);
 
   const visibleTasks = filterAndSortTasks(tasks, filters, sort);
   const hasActiveFilters =
-    filters.search.trim() !== "" || filters.status !== "all" || filters.priority !== "all";
+    filters.search.trim() !== "" ||
+    filters.status !== "all" ||
+    filters.priority !== "all";
   const shouldShowEmptyState = !isLoading && visibleTasks.length === 0;
 
   function openAddForm() {
@@ -69,8 +81,18 @@ export function TasksPage() {
 
     if (editingTask) {
       await updateTask(editingTask.id, pendingFormValues);
+      showToast({
+        type: "success",
+        title: "Task updated",
+        message: "Task details have been updated.",
+      });
     } else {
       await addTask(pendingFormValues);
+      showToast({
+        type: "success",
+        title: "Task created",
+        message: "New task has been added.",
+      });
     }
 
     setPendingFormValues(undefined);
@@ -96,6 +118,11 @@ export function TasksPage() {
 
     await archiveTask(taskToArchive.id);
     setTaskToArchive(undefined);
+
+    showToast({
+      type: "success",
+      title: "Task moved to backlog",
+    });
   }
 
   function resetFilters() {
@@ -107,7 +134,9 @@ export function TasksPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-slate-950 dark:text-slate-50">Tasks</h2>
+          <h2 className="text-xl font-semibold text-slate-950 dark:text-slate-50">
+            Tasks
+          </h2>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             A Kanban-ready structure prepared for future task actions.
           </p>
@@ -122,7 +151,11 @@ export function TasksPage() {
       </div>
 
       {isFormOpen ? (
-        <TaskForm initialTask={editingTask} onCancel={closeForm} onSubmit={handleSubmit} />
+        <TaskForm
+          initialTask={editingTask}
+          onCancel={closeForm}
+          onSubmit={handleSubmit}
+        />
       ) : null}
 
       {error ? (
@@ -163,13 +196,25 @@ export function TasksPage() {
               ? "Adjust your search or filters to bring tasks back into view."
               : "Create a task to start filling your active board."
           }
-          title={hasActiveFilters ? "No tasks match your filters" : "No active tasks yet"}
+          title={
+            hasActiveFilters
+              ? "No tasks match your filters"
+              : "No active tasks yet"
+          }
         />
       ) : (
         <KanbanBoard
           onArchiveTask={requestArchiveTask}
           onEditTask={openEditForm}
-          onStatusChange={changeTaskStatus}
+          onStatusChange={async (taskId, status) => {
+            await changeTaskStatus(taskId, status);
+
+            showToast({
+              type: "success",
+              title: "Task status updated",
+              message: `Moved task to ${status}.`,
+            });
+          }}
           tasks={visibleTasks}
         />
       )}
@@ -199,6 +244,7 @@ export function TasksPage() {
         onConfirm={confirmArchiveTask}
         title="Move this task to backlog?"
       />
+      <ToastContainer toasts={toasts} onClose={removeToast} />
     </div>
   );
 }
