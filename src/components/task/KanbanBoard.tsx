@@ -21,7 +21,7 @@ export function KanbanBoard({
   tasks,
 }: KanbanBoardProps) {
   return (
-    <div className="grid gap-4 lg:grid-cols-3">
+    <div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0 lg:grid lg:grid-cols-3 lg:overflow-visible lg:pb-0">
       {columns.map((column) => (
         <TaskColumn
           key={column.status}

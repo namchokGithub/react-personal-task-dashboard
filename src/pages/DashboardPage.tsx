@@ -28,8 +28,8 @@ export function DashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold text-slate-950">Dashboard</h2>
-        <p className="mt-1 text-sm text-slate-500">
+        <h2 className="text-xl font-semibold text-slate-950 dark:text-slate-50">Dashboard</h2>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           A quick overview of your current personal task load.
         </p>
       </div>
@@ -37,9 +37,13 @@ export function DashboardPage() {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {summaries.map((summary) => (
           <Card className={summaryCardClasses} key={summary.label}>
-            <p className="text-sm font-medium text-slate-500">{summary.label}</p>
-            <p className="mt-3 text-3xl font-semibold text-slate-950">{summary.value}</p>
-            <p className="mt-2 text-sm text-slate-500">{summary.detail}</p>
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+              {summary.label}
+            </p>
+            <p className="mt-3 text-3xl font-semibold text-slate-950 dark:text-slate-50">
+              {summary.value}
+            </p>
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{summary.detail}</p>
           </Card>
         ))}
       </div>

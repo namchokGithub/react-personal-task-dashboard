@@ -13,6 +13,8 @@ This project is intentionally a foundation, not a fully completed task app yet. 
 - Realtime task loading with Firestore snapshots
 - Anonymous Firebase Auth for Firestore rules
 - Basic task CRUD
+- Task form validation
+- Confirm modal before add, edit, and permanent delete
 - Change task status
 - Move tasks to backlog instead of deleting from the active board
 - Permanent delete from the backlog page
@@ -21,9 +23,10 @@ This project is intentionally a foundation, not a fully completed task app yet. 
 - Sort tasks by due date
 - Basic app routing
 - Sidebar navigation with active route state
+- Dark mode with persisted theme preference
 - Settings placeholder page
 - Reusable UI components
-- Responsive-friendly layout
+- Responsive desktop and mobile layout
 
 ## Project Status
 
@@ -33,7 +36,7 @@ This project is intentionally a foundation, not a fully completed task app yet. 
 - Phase 4: Filter / Search / Sort - completed
 - Phase 5: Firestore persistence - completed
 - Phase 6: Routing - completed
-- Phase 7 and later - prepared for future improvements
+- Phase 7: Polish UI - in progress
 
 ## Current Pages
 
@@ -148,86 +151,88 @@ service cloud.firestore {
 - `src/lib/firebase.ts` - Firebase app, Auth, and Firestore initialization
 - `src/services/taskService.ts` - Firestore task read/write helpers
 - `src/hooks/useTasks.ts` - task state, Firestore subscription, and CRUD actions
+- `src/hooks/useTheme.ts` - persisted light/dark theme state
 - `src/utils/taskUtils.ts` - simple dashboard summary helpers
 - `src/components/task/` - Kanban board, columns, and task cards
 - `src/components/layout/` - app shell, sidebar, and header
-- `src/components/ui/` - reusable base UI components
+- `src/components/ui/` - reusable base UI components, including cards, buttons, badges, empty states, and confirm dialogs
 
 ## Future Features
 
 The structure is prepared for adding:
 
-- Dark mode
 - Drag-and-drop Kanban
 
 ## Roadmap
 
-### Phase 1: Basic React + Tailwind
+### ~~Phase 1: Basic React + Tailwind~~
 
-Build the UI first without complex logic.
+~~Build the UI first without complex logic.~~
 
-- Main layout
-- Sidebar / Navbar
-- Task Card
-- Dashboard Card
-- Render task data with `.map()`
+- ~~Main layout~~
+- ~~Sidebar / Navbar~~
+- ~~Task Card~~
+- ~~Dashboard Card~~
+- ~~Render task data with `.map()`~~
 
-### Phase 2: State + CRUD
+### ~~Phase 2: State + CRUD~~
 
-Add task data management.
+~~Add task data management.~~
 
-- Add Task
-- Edit Task
-- Delete Task
-- Change Status
-- Use `useState` or `useReducer`
+- ~~Add Task~~
+- ~~Edit Task~~
+- ~~Delete Task~~
+- ~~Change Status~~
+- ~~Use `useState` or `useReducer`~~
+- ~~Confirm before saving or permanently deleting~~
 
-### Phase 3: Stronger TypeScript
+### ~~Phase 3: Stronger TypeScript~~
 
-Add complete and reusable types.
+~~Add complete and reusable types.~~
 
-- Task interface
-- Form state type
-- Filter type
-- Sort type
-- Component props type
+- ~~Task interface~~
+- ~~Form state type~~
+- ~~Filter type~~
+- ~~Sort type~~
+- ~~Component props type~~
 
-### Phase 4: Filter / Search / Sort
+### ~~Phase 4: Filter / Search / Sort~~
 
-Practice frontend data logic.
+~~Practice frontend data logic.~~
 
-- Search by title
-- Filter by status
-- Filter by priority
-- Sort by due date
+- ~~Search by title~~
+- ~~Filter by status~~
+- ~~Filter by priority~~
+- ~~Sort by due date~~
 
-### Phase 5: Firestore
+### ~~Phase 5: Firestore~~
 
-Keep task data after refreshing the browser by saving it remotely.
+~~Keep task data after refreshing the browser by saving it remotely.~~
 
-- Load initial data from Firestore
-- Save task changes to Firestore
-- Listen for realtime task updates
+- ~~Load initial data from Firestore~~
+- ~~Save task changes to Firestore~~
+- ~~Listen for realtime task updates~~
 
-### Phase 6: Routing
+### ~~Phase 6: Routing~~
 
-Add multiple pages with `react-router-dom`.
+~~Add multiple pages with `react-router-dom`.~~
 
-- `/dashboard`
-- `/tasks`
-- `/backlog`
-- `/settings`
+- ~~`/dashboard`~~
+- ~~`/tasks`~~
+- ~~`/backlog`~~
+- ~~`/settings`~~
 
 ### Phase 7: Polish UI
 
 Improve the interface and interaction details with Tailwind CSS.
 
-- Dark mode
-- Responsive mobile layout
+- ~~Dark mode~~
+- ~~Responsive mobile and desktop layout~~
 - Hover / transition states
 - Empty state
 - Priority-based badge colors
 - Light modal animation
+- Better loading and error states
 
 ## Notes
 
