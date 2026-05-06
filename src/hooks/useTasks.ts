@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
-import { mockTasks } from "../data/mockTasks";
-import type { CreateTaskInput, Task, TaskStatus, UpdateTaskInput } from "../types/task";
-import { getStorageItem, setStorageItem } from "../utils/storage";
-
-const TASKS_STORAGE_KEY = "personal-task-dashboard:tasks";
+import { onAuthStateChanged, signInAnonymously, type Unsubscribe } from "firebase/auth";
+import { firebaseAuth, hasFirebaseConfig } from "../lib/firebase";
+import { deleteTaskDocument, saveTask, subscribeToTasks } from "../services/taskService";
+import type { ActiveTaskStatus, CreateTaskInput, Task, TaskStatus, UpdateTaskInput } from "../types/task";
 
 function createTaskId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -29,68 +28,179 @@ function createTaskFromValues(values: CreateTaskInput): Task {
 }
 
 export function useTasks() {
-  const [tasks, setTasksState] = useState<Task[]>(() =>
-    getStorageItem<Task[]>(TASKS_STORAGE_KEY, mockTasks),
+  const [tasks, setTasksState] = useState<Task[]>([]);
+  const [isLoading, setIsLoading] = useState(hasFirebaseConfig);
+  const [error, setError] = useState<string | undefined>(
+    hasFirebaseConfig ? undefined : "Firebase config is missing. Add values to .env.",
   );
 
   useEffect(() => {
-    setStorageItem(TASKS_STORAGE_KEY, tasks);
-  }, [tasks]);
+    if (!hasFirebaseConfig || !firebaseAuth) {
+      setIsLoading(false);
+      return;
+    }
 
-  function getTasks(): Task[] {
-    return tasks;
+    const auth = firebaseAuth;
+    let unsubscribeTasks: Unsubscribe | undefined;
+
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        void signInAnonymously(auth).catch((authError: unknown) => {
+          setError(authError instanceof Error ? authError.message : "Unable to sign in.");
+          setIsLoading(false);
+        });
+        return;
+      }
+
+      unsubscribeTasks?.();
+      unsubscribeTasks = subscribeToTasks({
+        onError: (firestoreError) => {
+          setError(firestoreError.message);
+          setIsLoading(false);
+        },
+        onNext: (nextTasks) => {
+          setTasksState(nextTasks);
+          setIsLoading(false);
+        },
+      });
+    });
+
+    return () => {
+      unsubscribeTasks?.();
+      unsubscribeAuth();
+    };
+  }, []);
+
+  async function persistTask(nextTask: Task): Promise<void> {
+    if (!hasFirebaseConfig) {
+      setError("Firebase config is missing. Add values to .env.");
+      return;
+    }
+
+    await saveTask(nextTask);
   }
 
-  function setTasks(nextTasks: Task[]): void {
-    setTasksState(nextTasks);
+  async function addTask(values: CreateTaskInput): Promise<void> {
+    try {
+      setError(undefined);
+      await persistTask(createTaskFromValues(values));
+    } catch (taskError) {
+      setError(taskError instanceof Error ? taskError.message : "Unable to add task.");
+    }
   }
 
-  function addTask(values: CreateTaskInput): void {
-    setTasksState((currentTasks) => [createTaskFromValues(values), ...currentTasks]);
+  async function updateTask(taskId: string, values: UpdateTaskInput): Promise<void> {
+    const taskToUpdate = tasks.find((task) => task.id === taskId);
+
+    if (!taskToUpdate) {
+      return;
+    }
+
+    const nextTask: Task = {
+      ...taskToUpdate,
+      title: values.title.trim(),
+      description: values.description.trim() || undefined,
+      status: values.status,
+      priority: values.priority,
+      dueDate: values.dueDate || undefined,
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (!hasFirebaseConfig) {
+      setError("Firebase config is missing. Add values to .env.");
+      return;
+    }
+
+    try {
+      setError(undefined);
+      await saveTask(nextTask);
+    } catch (taskError) {
+      setError(taskError instanceof Error ? taskError.message : "Unable to update task.");
+    }
   }
 
-  function updateTask(taskId: string, values: UpdateTaskInput): void {
-    setTasksState((currentTasks) =>
-      currentTasks.map((task) =>
-        task.id === taskId
-          ? {
+  async function changeTaskStatus(taskId: string, status: TaskStatus): Promise<void> {
+    const taskToUpdate = tasks.find((task) => task.id === taskId);
+
+    if (!taskToUpdate) {
+      return;
+    }
+
+    const nextTask: Task = {
+      ...taskToUpdate,
+      status,
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (!hasFirebaseConfig) {
+      setError("Firebase config is missing. Add values to .env.");
+      return;
+    }
+
+    try {
+      setError(undefined);
+      await saveTask(nextTask);
+    } catch (taskError) {
+      setError(taskError instanceof Error ? taskError.message : "Unable to change task status.");
+    }
+  }
+
+  async function archiveTask(taskId: string): Promise<void> {
+    await changeTaskStatus(taskId, "backlog");
+  }
+
+  async function archiveAllTasks(): Promise<void> {
+    if (!hasFirebaseConfig) {
+      setError("Firebase config is missing. Add values to .env.");
+      return;
+    }
+
+    try {
+      setError(undefined);
+      await Promise.all(
+        tasks
+          .filter((task) => task.status !== "backlog")
+          .map((task) =>
+            saveTask({
               ...task,
-              title: values.title.trim(),
-              description: values.description.trim() || undefined,
-              status: values.status,
-              priority: values.priority,
-              dueDate: values.dueDate || undefined,
+              status: "backlog",
               updatedAt: new Date().toISOString(),
-            }
-          : task,
-      ),
-    );
+            }),
+          ),
+      );
+    } catch (taskError) {
+      setError(taskError instanceof Error ? taskError.message : "Unable to move tasks to backlog.");
+    }
   }
 
-  function deleteTask(taskId: string): void {
-    setTasksState((currentTasks) => currentTasks.filter((task) => task.id !== taskId));
+  async function restoreTask(taskId: string, status: ActiveTaskStatus = "todo"): Promise<void> {
+    await changeTaskStatus(taskId, status);
   }
 
-  function changeTaskStatus(taskId: string, status: TaskStatus): void {
-    setTasksState((currentTasks) =>
-      currentTasks.map((task) =>
-        task.id === taskId ? { ...task, status, updatedAt: new Date().toISOString() } : task,
-      ),
-    );
-  }
+  async function deleteTask(taskId: string): Promise<void> {
+    if (!hasFirebaseConfig) {
+      setError("Firebase config is missing. Add values to .env.");
+      return;
+    }
 
-  function resetTasks(): void {
-    setTasksState(mockTasks);
+    try {
+      setError(undefined);
+      await deleteTaskDocument(taskId);
+    } catch (taskError) {
+      setError(taskError instanceof Error ? taskError.message : "Unable to delete task.");
+    }
   }
 
   return {
+    error,
+    isLoading,
     tasks,
-    getTasks,
-    setTasks,
     addTask,
-    updateTask,
-    deleteTask,
+    archiveAllTasks,
+    archiveTask,
     changeTaskStatus,
-    resetTasks,
+    deleteTask,
+    restoreTask,
+    updateTask,
   };
 }

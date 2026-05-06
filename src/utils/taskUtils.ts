@@ -1,7 +1,7 @@
 import type { Task, TaskFilters, TaskSort } from "../types/task";
 
 export function getTotalTasks(tasks: Task[]): number {
-  return tasks.length;
+  return tasks.filter((task) => task.status !== "backlog").length;
 }
 
 export function getCompletedTasks(tasks: Task[]): number {
@@ -9,7 +9,7 @@ export function getCompletedTasks(tasks: Task[]): number {
 }
 
 export function getPendingTasks(tasks: Task[]): number {
-  return tasks.filter((task) => task.status !== "done").length;
+  return tasks.filter((task) => task.status !== "done" && task.status !== "backlog").length;
 }
 
 export function getUpcomingDueTasks(tasks: Task[]): number {
@@ -20,7 +20,7 @@ export function getUpcomingDueTasks(tasks: Task[]): number {
   nextWeek.setDate(today.getDate() + 7);
 
   return tasks.filter((task) => {
-    if (!task.dueDate || task.status === "done") {
+    if (!task.dueDate || task.status === "done" || task.status === "backlog") {
       return false;
     }
 
@@ -43,6 +43,10 @@ export function filterAndSortTasks(tasks: Task[], filters: TaskFilters, sort: Ta
   const normalizedSearch = filters.search.trim().toLowerCase();
 
   const filteredTasks = tasks.filter((task) => {
+    if (task.status === "backlog") {
+      return false;
+    }
+
     const matchesSearch =
       normalizedSearch.length === 0 || task.title.toLowerCase().includes(normalizedSearch);
     const matchesStatus = filters.status === "all" || task.status === filters.status;

@@ -1,4 +1,6 @@
-export type TaskStatus = "todo" | "in_progress" | "done";
+export type ActiveTaskStatus = "todo" | "in_progress" | "done";
+
+export type TaskStatus = ActiveTaskStatus | "backlog";
 
 export type TaskPriority = "low" | "medium" | "high";
 
@@ -21,7 +23,7 @@ export interface TaskFormValues {
   dueDate: string;
 }
 
-export type TaskFilterStatus = TaskStatus | "all";
+export type TaskFilterStatus = ActiveTaskStatus | "all";
 export type TaskFilterPriority = TaskPriority | "all";
 export type TaskSortBy = "createdAt" | "dueDate" | "priority";
 export type TaskSortDirection = "asc" | "desc";

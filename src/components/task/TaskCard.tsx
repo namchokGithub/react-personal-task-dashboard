@@ -1,12 +1,12 @@
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
-import type { Task, TaskPriority, TaskStatus } from "../../types/task";
+import type { ActiveTaskStatus, Task, TaskPriority, TaskStatus } from "../../types/task";
 
 export interface TaskCardProps {
-  onDelete: (taskId: string) => void;
+  onArchive: (taskId: string) => void;
   onEdit: (task: Task) => void;
-  onStatusChange: (taskId: string, status: TaskStatus) => void;
+  onStatusChange: (taskId: string, status: ActiveTaskStatus) => void;
   task: Task;
 }
 
@@ -20,6 +20,7 @@ const statusLabel: Record<TaskStatus, string> = {
   todo: "Todo",
   in_progress: "In Progress",
   done: "Done",
+  backlog: "Backlog",
 };
 
 const priorityVariant: Record<TaskPriority, "neutral" | "warning" | "danger"> = {
@@ -32,9 +33,10 @@ const statusVariant: Record<TaskStatus, "neutral" | "info" | "success"> = {
   todo: "neutral",
   in_progress: "info",
   done: "success",
+  backlog: "neutral",
 };
 
-export function TaskCard({ onDelete, onEdit, onStatusChange, task }: TaskCardProps) {
+export function TaskCard({ onArchive, onEdit, onStatusChange, task }: TaskCardProps) {
   return (
     <Card className="p-4">
       <div className="space-y-3">
@@ -58,7 +60,7 @@ export function TaskCard({ onDelete, onEdit, onStatusChange, task }: TaskCardPro
           <span className="text-xs font-medium text-slate-500">Move status</span>
           <select
             className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
-            onChange={(event) => onStatusChange(task.id, event.target.value as TaskStatus)}
+            onChange={(event) => onStatusChange(task.id, event.target.value as ActiveTaskStatus)}
             value={task.status}
           >
             <option value="todo">Todo</option>
@@ -72,11 +74,11 @@ export function TaskCard({ onDelete, onEdit, onStatusChange, task }: TaskCardPro
             Edit
           </Button>
           <Button
-            className="min-h-9 px-3 text-rose-600 hover:text-rose-700"
-            onClick={() => onDelete(task.id)}
+            className="min-h-9 px-3"
+            onClick={() => onArchive(task.id)}
             variant="ghost"
           >
-            Delete
+            Backlog
           </Button>
         </div>
       </div>

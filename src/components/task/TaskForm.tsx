@@ -6,7 +6,7 @@ import type { Task, TaskFormValues, TaskPriority, TaskStatus } from "../../types
 export interface TaskFormProps {
   initialTask?: Task;
   onCancel: () => void;
-  onSubmit: (values: TaskFormValues) => void;
+  onSubmit: (values: TaskFormValues) => Promise<void> | void;
 }
 
 const defaultValues: TaskFormValues = {
@@ -21,6 +21,12 @@ interface SelectOption<TValue extends string> {
   label: string;
   value: TValue;
 }
+
+type TaskFormErrors = Partial<Record<keyof TaskFormValues, string>>;
+type TouchedFields = Partial<Record<keyof TaskFormValues, boolean>>;
+
+const maxTitleLength = 80;
+const maxDescriptionLength = 300;
 
 const statusOptions: Array<SelectOption<TaskStatus>> = [
   { label: "Todo", value: "todo" },
@@ -48,10 +54,60 @@ function getInitialValues(initialTask?: Task): TaskFormValues {
   };
 }
 
+function getTodayDateString(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function validateTaskForm(values: TaskFormValues): TaskFormErrors {
+  const errors: TaskFormErrors = {};
+  const trimmedTitle = values.title.trim();
+  const trimmedDescription = values.description.trim();
+
+  if (!trimmedTitle) {
+    errors.title = "Title is required.";
+  } else if (trimmedTitle.length > maxTitleLength) {
+    errors.title = `Title must be ${maxTitleLength} characters or less.`;
+  }
+
+  if (trimmedDescription.length > maxDescriptionLength) {
+    errors.description = `Description must be ${maxDescriptionLength} characters or less.`;
+  }
+
+  if (values.dueDate && values.dueDate < getTodayDateString()) {
+    errors.dueDate = "Due date cannot be in the past.";
+  }
+
+  return errors;
+}
+
+function getFieldClassName(hasError: boolean): string {
+  const baseClassName =
+    "w-full rounded-lg border bg-white px-3 py-2 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:ring-4";
+
+  if (hasError) {
+    return `${baseClassName} border-rose-300 focus:border-rose-400 focus:ring-rose-100`;
+  }
+
+  return `${baseClassName} border-slate-200 focus:border-slate-400 focus:ring-slate-100`;
+}
+
 export function TaskForm({ initialTask, onCancel, onSubmit }: TaskFormProps) {
   const [values, setValues] = useState<TaskFormValues>(() => getInitialValues(initialTask));
+  const [touchedFields, setTouchedFields] = useState<TouchedFields>({});
   const isEditing = Boolean(initialTask);
-  const isSubmitDisabled = values.title.trim().length === 0;
+  const errors = validateTaskForm(values);
+  const isSubmitDisabled = Object.keys(errors).length > 0;
+
+  function getVisibleError(field: keyof TaskFormValues): string | undefined {
+    return touchedFields[field] ? errors[field] : undefined;
+  }
+
+  function markFieldTouched(field: keyof TaskFormValues) {
+    setTouchedFields((currentTouchedFields) => ({
+      ...currentTouchedFields,
+      [field]: true,
+    }));
+  }
 
   function updateField<Key extends keyof TaskFormValues>(key: Key, value: TaskFormValues[Key]) {
     setValues((currentValues) => ({
@@ -60,14 +116,25 @@ export function TaskForm({ initialTask, onCancel, onSubmit }: TaskFormProps) {
     }));
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (isSubmitDisabled) {
+      setTouchedFields({
+        title: true,
+        description: true,
+        dueDate: true,
+        priority: true,
+        status: true,
+      });
       return;
     }
 
-    onSubmit(values);
+    await onSubmit({
+      ...values,
+      title: values.title.trim(),
+      description: values.description.trim(),
+    });
   }
 
   return (
@@ -86,27 +153,46 @@ export function TaskForm({ initialTask, onCancel, onSubmit }: TaskFormProps) {
           <label className="space-y-1.5">
             <span className="text-sm font-medium text-slate-700">Title</span>
             <input
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
+              aria-invalid={Boolean(getVisibleError("title"))}
+              className={getFieldClassName(Boolean(getVisibleError("title")))}
+              maxLength={maxTitleLength + 1}
+              onBlur={() => markFieldTouched("title")}
               onChange={(event) => updateField("title", event.target.value)}
               placeholder="Write a task title"
               value={values.title}
             />
+            <div className="flex items-center justify-between gap-3">
+              {getVisibleError("title") ? (
+                <p className="text-xs font-medium text-rose-600">{getVisibleError("title")}</p>
+              ) : (
+                <span />
+              )}
+              <p className="text-xs text-slate-400">
+                {values.title.trim().length}/{maxTitleLength}
+              </p>
+            </div>
           </label>
 
           <label className="space-y-1.5">
             <span className="text-sm font-medium text-slate-700">Due date</span>
             <input
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
+              aria-invalid={Boolean(getVisibleError("dueDate"))}
+              className={getFieldClassName(Boolean(getVisibleError("dueDate")))}
+              min={getTodayDateString()}
+              onBlur={() => markFieldTouched("dueDate")}
               onChange={(event) => updateField("dueDate", event.target.value)}
               type="date"
               value={values.dueDate}
             />
+            {getVisibleError("dueDate") ? (
+              <p className="text-xs font-medium text-rose-600">{getVisibleError("dueDate")}</p>
+            ) : null}
           </label>
 
           <label className="space-y-1.5">
             <span className="text-sm font-medium text-slate-700">Status</span>
             <select
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
+              className={getFieldClassName(false)}
               onChange={(event) => updateField("status", event.target.value as TaskStatus)}
               value={values.status}
             >
@@ -121,7 +207,7 @@ export function TaskForm({ initialTask, onCancel, onSubmit }: TaskFormProps) {
           <label className="space-y-1.5">
             <span className="text-sm font-medium text-slate-700">Priority</span>
             <select
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
+              className={getFieldClassName(false)}
               onChange={(event) => updateField("priority", event.target.value as TaskPriority)}
               value={values.priority}
             >
@@ -137,11 +223,26 @@ export function TaskForm({ initialTask, onCancel, onSubmit }: TaskFormProps) {
         <label className="block space-y-1.5">
           <span className="text-sm font-medium text-slate-700">Description</span>
           <textarea
-            className="min-h-24 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
+            aria-invalid={Boolean(getVisibleError("description"))}
+            className={`min-h-24 ${getFieldClassName(Boolean(getVisibleError("description")))}`}
+            maxLength={maxDescriptionLength + 1}
+            onBlur={() => markFieldTouched("description")}
             onChange={(event) => updateField("description", event.target.value)}
             placeholder="Add a short note"
             value={values.description}
           />
+          <div className="flex items-center justify-between gap-3">
+            {getVisibleError("description") ? (
+              <p className="text-xs font-medium text-rose-600">
+                {getVisibleError("description")}
+              </p>
+            ) : (
+              <span />
+            )}
+            <p className="text-xs text-slate-400">
+              {values.description.trim().length}/{maxDescriptionLength}
+            </p>
+          </div>
         </label>
 
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
