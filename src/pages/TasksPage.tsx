@@ -4,6 +4,7 @@ import { TaskFiltersPanel } from "../components/task/TaskFiltersPanel";
 import { TaskForm } from "../components/task/TaskForm";
 import { Button } from "../components/ui/Button";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
+import { EmptyState } from "../components/ui/EmptyState";
 import { useTasks } from "../hooks/useTasks";
 import type { Task, TaskFilters, TaskSort, UpdateTaskInput } from "../types/task";
 import { filterAndSortTasks } from "../utils/taskUtils";
@@ -32,11 +33,15 @@ export function TasksPage() {
   } = useTasks();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | undefined>();
+  const [taskToArchive, setTaskToArchive] = useState<Task | undefined>();
   const [pendingFormValues, setPendingFormValues] = useState<UpdateTaskInput | undefined>();
   const [filters, setFilters] = useState<TaskFilters>(defaultFilters);
   const [sort, setSort] = useState<TaskSort>(defaultSort);
 
   const visibleTasks = filterAndSortTasks(tasks, filters, sort);
+  const hasActiveFilters =
+    filters.search.trim() !== "" || filters.status !== "all" || filters.priority !== "all";
+  const shouldShowEmptyState = !isLoading && visibleTasks.length === 0;
 
   function openAddForm() {
     setEditingTask(undefined);
@@ -76,6 +81,23 @@ export function TasksPage() {
     setPendingFormValues(undefined);
   }
 
+  function requestArchiveTask(taskId: string) {
+    const selectedTask = tasks.find((task) => task.id === taskId);
+
+    if (selectedTask) {
+      setTaskToArchive(selectedTask);
+    }
+  }
+
+  async function confirmArchiveTask() {
+    if (!taskToArchive) {
+      return;
+    }
+
+    await archiveTask(taskToArchive.id);
+    setTaskToArchive(undefined);
+  }
+
   function resetFilters() {
     setFilters(defaultFilters);
     setSort(defaultSort);
@@ -85,13 +107,13 @@ export function TasksPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-slate-950">Tasks</h2>
-          <p className="mt-1 text-sm text-slate-500">
+          <h2 className="text-xl font-semibold text-slate-950 dark:text-slate-50">Tasks</h2>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             A Kanban-ready structure prepared for future task actions.
           </p>
         </div>
 
-        <div className="flex flex-col gap-2 sm:flex-row">
+        <div className="grid gap-2 sm:flex sm:flex-row">
           <Button onClick={openAddForm}>Add task</Button>
           <Button onClick={archiveAllTasks} variant="secondary">
             Move all to backlog
@@ -104,13 +126,13 @@ export function TasksPage() {
       ) : null}
 
       {error ? (
-        <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-300">
           {error}
         </div>
       ) : null}
 
       {isLoading ? (
-        <div className="rounded-lg border border-slate-200 bg-white px-4 py-6 text-sm text-slate-500 shadow-sm">
+        <div className="rounded-lg border border-slate-200 bg-white px-4 py-6 text-sm text-slate-500 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
           Loading tasks from Firestore...
         </div>
       ) : null}
@@ -125,12 +147,32 @@ export function TasksPage() {
         totalCount={tasks.length}
       />
 
-      <KanbanBoard
-        onArchiveTask={archiveTask}
-        onEditTask={openEditForm}
-        onStatusChange={changeTaskStatus}
-        tasks={visibleTasks}
-      />
+      {shouldShowEmptyState ? (
+        <EmptyState
+          action={
+            hasActiveFilters ? (
+              <Button onClick={resetFilters} variant="secondary">
+                Clear filters
+              </Button>
+            ) : (
+              <Button onClick={openAddForm}>Add your first task</Button>
+            )
+          }
+          description={
+            hasActiveFilters
+              ? "Adjust your search or filters to bring tasks back into view."
+              : "Create a task to start filling your active board."
+          }
+          title={hasActiveFilters ? "No tasks match your filters" : "No active tasks yet"}
+        />
+      ) : (
+        <KanbanBoard
+          onArchiveTask={requestArchiveTask}
+          onEditTask={openEditForm}
+          onStatusChange={changeTaskStatus}
+          tasks={visibleTasks}
+        />
+      )}
 
       <ConfirmDialog
         confirmLabel={editingTask ? "Save changes" : "Add task"}
@@ -143,6 +185,19 @@ export function TasksPage() {
         onCancel={cancelSaveTask}
         onConfirm={confirmSaveTask}
         title={editingTask ? "Save task changes?" : "Add this task?"}
+      />
+
+      <ConfirmDialog
+        confirmLabel="Move to backlog"
+        description={
+          taskToArchive
+            ? `This will move "${taskToArchive.title}" out of the active board. You can restore it from the backlog later.`
+            : ""
+        }
+        isOpen={Boolean(taskToArchive)}
+        onCancel={() => setTaskToArchive(undefined)}
+        onConfirm={confirmArchiveTask}
+        title="Move this task to backlog?"
       />
     </div>
   );

@@ -22,10 +22,10 @@ export function TaskColumn({
   const columnTasks = tasks.filter((task) => task.status === status);
 
   return (
-    <section className="min-h-80 rounded-lg border border-slate-200 bg-slate-100/70 p-4">
+    <section className="min-h-80 min-w-[18rem] rounded-lg border border-slate-200 bg-slate-100/70 p-4 transition duration-200 hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900/70 dark:hover:border-slate-700 sm:min-w-[20rem] lg:min-w-0">
       <div className="mb-4 flex items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold text-slate-950">{title}</h2>
-        <span className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-slate-600">
+        <h2 className="text-sm font-semibold text-slate-950 dark:text-slate-50">{title}</h2>
+        <span className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-slate-600 shadow-sm transition-colors dark:bg-slate-800 dark:text-slate-300">
           {columnTasks.length}
         </span>
       </div>

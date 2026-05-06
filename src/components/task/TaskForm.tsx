@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
+import { usePrioritySettings } from "../../hooks/usePrioritySettings";
 import type { Task, TaskFormValues, TaskPriority, TaskStatus } from "../../types/task";
 
 export interface TaskFormProps {
@@ -34,11 +35,7 @@ const statusOptions: Array<SelectOption<TaskStatus>> = [
   { label: "Done", value: "done" },
 ];
 
-const priorityOptions: Array<SelectOption<TaskPriority>> = [
-  { label: "Low", value: "low" },
-  { label: "Medium", value: "medium" },
-  { label: "High", value: "high" },
-];
+const priorityValues: TaskPriority[] = ["low", "medium", "high"];
 
 function getInitialValues(initialTask?: Task): TaskFormValues {
   if (!initialTask) {
@@ -82,16 +79,17 @@ function validateTaskForm(values: TaskFormValues): TaskFormErrors {
 
 function getFieldClassName(hasError: boolean): string {
   const baseClassName =
-    "w-full rounded-lg border bg-white px-3 py-2 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:ring-4";
+    "w-full rounded-lg border bg-white px-3 py-2 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:ring-4 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500";
 
   if (hasError) {
-    return `${baseClassName} border-rose-300 focus:border-rose-400 focus:ring-rose-100`;
+    return `${baseClassName} border-rose-300 focus:border-rose-400 focus:ring-rose-100 dark:border-rose-800 dark:focus:border-rose-500 dark:focus:ring-rose-950`;
   }
 
-  return `${baseClassName} border-slate-200 focus:border-slate-400 focus:ring-slate-100`;
+  return `${baseClassName} border-slate-200 focus:border-slate-400 focus:ring-slate-100 dark:border-slate-700 dark:focus:border-slate-500 dark:focus:ring-slate-800`;
 }
 
 export function TaskForm({ initialTask, onCancel, onSubmit }: TaskFormProps) {
+  const { prioritySettings } = usePrioritySettings();
   const [values, setValues] = useState<TaskFormValues>(() => getInitialValues(initialTask));
   const [touchedFields, setTouchedFields] = useState<TouchedFields>({});
   const isEditing = Boolean(initialTask);
@@ -141,17 +139,17 @@ export function TaskForm({ initialTask, onCancel, onSubmit }: TaskFormProps) {
     <Card>
       <form className="space-y-4" onSubmit={handleSubmit}>
         <div>
-          <h3 className="text-base font-semibold text-slate-950">
+          <h3 className="text-base font-semibold text-slate-950 dark:text-slate-50">
             {isEditing ? "Edit task" : "Add task"}
           </h3>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Keep the form simple for now. More fields can be added later.
           </p>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2">
           <label className="space-y-1.5">
-            <span className="text-sm font-medium text-slate-700">Title</span>
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Title</span>
             <input
               aria-invalid={Boolean(getVisibleError("title"))}
               className={getFieldClassName(Boolean(getVisibleError("title")))}
@@ -163,18 +161,22 @@ export function TaskForm({ initialTask, onCancel, onSubmit }: TaskFormProps) {
             />
             <div className="flex items-center justify-between gap-3">
               {getVisibleError("title") ? (
-                <p className="text-xs font-medium text-rose-600">{getVisibleError("title")}</p>
+                <p className="text-xs font-medium text-rose-600 dark:text-rose-300">
+                  {getVisibleError("title")}
+                </p>
               ) : (
                 <span />
               )}
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-400 dark:text-slate-500">
                 {values.title.trim().length}/{maxTitleLength}
               </p>
             </div>
           </label>
 
           <label className="space-y-1.5">
-            <span className="text-sm font-medium text-slate-700">Due date</span>
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
+              Due date
+            </span>
             <input
               aria-invalid={Boolean(getVisibleError("dueDate"))}
               className={getFieldClassName(Boolean(getVisibleError("dueDate")))}
@@ -185,12 +187,14 @@ export function TaskForm({ initialTask, onCancel, onSubmit }: TaskFormProps) {
               value={values.dueDate}
             />
             {getVisibleError("dueDate") ? (
-              <p className="text-xs font-medium text-rose-600">{getVisibleError("dueDate")}</p>
+              <p className="text-xs font-medium text-rose-600 dark:text-rose-300">
+                {getVisibleError("dueDate")}
+              </p>
             ) : null}
           </label>
 
           <label className="space-y-1.5">
-            <span className="text-sm font-medium text-slate-700">Status</span>
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Status</span>
             <select
               className={getFieldClassName(false)}
               onChange={(event) => updateField("status", event.target.value as TaskStatus)}
@@ -205,15 +209,17 @@ export function TaskForm({ initialTask, onCancel, onSubmit }: TaskFormProps) {
           </label>
 
           <label className="space-y-1.5">
-            <span className="text-sm font-medium text-slate-700">Priority</span>
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
+              Priority
+            </span>
             <select
               className={getFieldClassName(false)}
               onChange={(event) => updateField("priority", event.target.value as TaskPriority)}
               value={values.priority}
             >
-              {priorityOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
+              {priorityValues.map((priority) => (
+                <option key={priority} value={priority}>
+                  {prioritySettings[priority].label}
                 </option>
               ))}
             </select>
@@ -221,7 +227,9 @@ export function TaskForm({ initialTask, onCancel, onSubmit }: TaskFormProps) {
         </div>
 
         <label className="block space-y-1.5">
-          <span className="text-sm font-medium text-slate-700">Description</span>
+          <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
+            Description
+          </span>
           <textarea
             aria-invalid={Boolean(getVisibleError("description"))}
             className={`min-h-24 ${getFieldClassName(Boolean(getVisibleError("description")))}`}
@@ -233,19 +241,19 @@ export function TaskForm({ initialTask, onCancel, onSubmit }: TaskFormProps) {
           />
           <div className="flex items-center justify-between gap-3">
             {getVisibleError("description") ? (
-              <p className="text-xs font-medium text-rose-600">
+              <p className="text-xs font-medium text-rose-600 dark:text-rose-300">
                 {getVisibleError("description")}
               </p>
             ) : (
               <span />
             )}
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-400 dark:text-slate-500">
               {values.description.trim().length}/{maxDescriptionLength}
             </p>
           </div>
         </label>
 
-        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <div className="grid gap-2 sm:flex sm:flex-row sm:justify-end">
           <Button onClick={onCancel} variant="secondary">
             Cancel
           </Button>
