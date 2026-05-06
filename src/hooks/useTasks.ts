@@ -1,8 +1,22 @@
 import { useEffect, useState } from "react";
-import { onAuthStateChanged, signInAnonymously, type Unsubscribe } from "firebase/auth";
+import {
+  onAuthStateChanged,
+  signInAnonymously,
+  type Unsubscribe,
+} from "firebase/auth";
 import { firebaseAuth, hasFirebaseConfig } from "../lib/firebase";
-import { deleteTaskDocument, saveTask, subscribeToTasks } from "../services/taskService";
-import type { ActiveTaskStatus, CreateTaskInput, Task, TaskStatus, UpdateTaskInput } from "../types/task";
+import {
+  deleteTaskDocument,
+  saveTask,
+  subscribeToTasks,
+} from "../services/taskService";
+import type {
+  ActiveTaskStatus,
+  CreateTaskInput,
+  Task,
+  TaskStatus,
+  UpdateTaskInput,
+} from "../types/task";
 
 function createTaskId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -31,7 +45,9 @@ export function useTasks() {
   const [tasks, setTasksState] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(hasFirebaseConfig);
   const [error, setError] = useState<string | undefined>(
-    hasFirebaseConfig ? undefined : "Firebase config is missing. Add values to .env.",
+    hasFirebaseConfig
+      ? undefined
+      : "Firebase config is missing. Add values to .env.",
   );
 
   useEffect(() => {
@@ -46,7 +62,11 @@ export function useTasks() {
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (!user) {
         void signInAnonymously(auth).catch((authError: unknown) => {
-          setError(authError instanceof Error ? authError.message : "Unable to sign in.");
+          setError(
+            authError instanceof Error
+              ? authError.message
+              : "Unable to sign in.",
+          );
           setIsLoading(false);
         });
         return;
@@ -85,11 +105,16 @@ export function useTasks() {
       setError(undefined);
       await persistTask(createTaskFromValues(values));
     } catch (taskError) {
-      setError(taskError instanceof Error ? taskError.message : "Unable to add task.");
+      setError(
+        taskError instanceof Error ? taskError.message : "Unable to add task.",
+      );
     }
   }
 
-  async function updateTask(taskId: string, values: UpdateTaskInput): Promise<void> {
+  async function updateTask(
+    taskId: string,
+    values: UpdateTaskInput,
+  ): Promise<void> {
     const taskToUpdate = tasks.find((task) => task.id === taskId);
 
     if (!taskToUpdate) {
@@ -115,11 +140,18 @@ export function useTasks() {
       setError(undefined);
       await saveTask(nextTask);
     } catch (taskError) {
-      setError(taskError instanceof Error ? taskError.message : "Unable to update task.");
+      setError(
+        taskError instanceof Error
+          ? taskError.message
+          : "Unable to update task.",
+      );
     }
   }
 
-  async function changeTaskStatus(taskId: string, status: TaskStatus): Promise<void> {
+  async function changeTaskStatus(
+    taskId: string,
+    status: TaskStatus,
+  ): Promise<void> {
     const taskToUpdate = tasks.find((task) => task.id === taskId);
 
     if (!taskToUpdate) {
@@ -132,16 +164,23 @@ export function useTasks() {
       updatedAt: new Date().toISOString(),
     };
 
-    if (!hasFirebaseConfig) {
-      setError("Firebase config is missing. Add values to .env.");
-      return;
-    }
-
     try {
       setError(undefined);
-      await saveTask(nextTask);
+
+      if (hasFirebaseConfig) {
+        await saveTask(nextTask);
+        return;
+      }
+
+      setTasksState((prevTasks) =>
+        prevTasks.map((task) => (task.id === taskId ? nextTask : task)),
+      );
     } catch (taskError) {
-      setError(taskError instanceof Error ? taskError.message : "Unable to change task status.");
+      setError(
+        taskError instanceof Error
+          ? taskError.message
+          : "Unable to change task status.",
+      );
     }
   }
 
@@ -169,11 +208,18 @@ export function useTasks() {
           ),
       );
     } catch (taskError) {
-      setError(taskError instanceof Error ? taskError.message : "Unable to move tasks to backlog.");
+      setError(
+        taskError instanceof Error
+          ? taskError.message
+          : "Unable to move tasks to backlog.",
+      );
     }
   }
 
-  async function restoreTask(taskId: string, status: ActiveTaskStatus = "todo"): Promise<void> {
+  async function restoreTask(
+    taskId: string,
+    status: ActiveTaskStatus = "todo",
+  ): Promise<void> {
     await changeTaskStatus(taskId, status);
   }
 
@@ -187,7 +233,11 @@ export function useTasks() {
       setError(undefined);
       await deleteTaskDocument(taskId);
     } catch (taskError) {
-      setError(taskError instanceof Error ? taskError.message : "Unable to delete task.");
+      setError(
+        taskError instanceof Error
+          ? taskError.message
+          : "Unable to delete task.",
+      );
     }
   }
 
