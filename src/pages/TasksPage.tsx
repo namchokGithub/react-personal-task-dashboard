@@ -4,6 +4,7 @@ import { TaskFiltersPanel } from "../components/task/TaskFiltersPanel";
 import { TaskForm } from "../components/task/TaskForm";
 import { Button } from "../components/ui/Button";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
+import { EmptyState } from "../components/ui/EmptyState";
 import { useTasks } from "../hooks/useTasks";
 import type { Task, TaskFilters, TaskSort, UpdateTaskInput } from "../types/task";
 import { filterAndSortTasks } from "../utils/taskUtils";
@@ -37,6 +38,9 @@ export function TasksPage() {
   const [sort, setSort] = useState<TaskSort>(defaultSort);
 
   const visibleTasks = filterAndSortTasks(tasks, filters, sort);
+  const hasActiveFilters =
+    filters.search.trim() !== "" || filters.status !== "all" || filters.priority !== "all";
+  const shouldShowEmptyState = !isLoading && visibleTasks.length === 0;
 
   function openAddForm() {
     setEditingTask(undefined);
@@ -125,12 +129,32 @@ export function TasksPage() {
         totalCount={tasks.length}
       />
 
-      <KanbanBoard
-        onArchiveTask={archiveTask}
-        onEditTask={openEditForm}
-        onStatusChange={changeTaskStatus}
-        tasks={visibleTasks}
-      />
+      {shouldShowEmptyState ? (
+        <EmptyState
+          action={
+            hasActiveFilters ? (
+              <Button onClick={resetFilters} variant="secondary">
+                Clear filters
+              </Button>
+            ) : (
+              <Button onClick={openAddForm}>Add your first task</Button>
+            )
+          }
+          description={
+            hasActiveFilters
+              ? "Adjust your search or filters to bring tasks back into view."
+              : "Create a task to start filling your active board."
+          }
+          title={hasActiveFilters ? "No tasks match your filters" : "No active tasks yet"}
+        />
+      ) : (
+        <KanbanBoard
+          onArchiveTask={archiveTask}
+          onEditTask={openEditForm}
+          onStatusChange={changeTaskStatus}
+          tasks={visibleTasks}
+        />
+      )}
 
       <ConfirmDialog
         confirmLabel={editingTask ? "Save changes" : "Add task"}

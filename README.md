@@ -24,7 +24,10 @@ This project is intentionally a foundation, not a fully completed task app yet. 
 - Basic app routing
 - Sidebar navigation with active route state
 - Dark mode with persisted theme preference
-- Settings placeholder page
+- Empty states for active tasks, filtered results, board columns, and backlog
+- Hover and transition states for shared UI controls, cards, and board columns
+- Configurable priority labels and badge colors
+- Settings page for appearance and priority preferences
 - Reusable UI components
 - Responsive desktop and mobile layout
 
@@ -43,7 +46,7 @@ This project is intentionally a foundation, not a fully completed task app yet. 
 - `/dashboard` - task summary cards for total, completed, pending, and upcoming due tasks
 - `/tasks` - simple Kanban-style board with Todo, In Progress, and Done columns
 - `/backlog` - archived tasks with restore and permanent delete actions
-- `/settings` - placeholder for future app settings
+- `/settings` - appearance controls and configurable priority labels with badge colors
 - `/` - redirects to `/dashboard`
 
 ## Tech Stack
@@ -228,15 +231,11 @@ Improve the interface and interaction details with Tailwind CSS.
 
 - ~~Dark mode~~
 - ~~Responsive mobile and desktop layout~~
-- Hover / transition states
-- Empty state
-- Priority-based badge colors
+- ~~Hover / transition states~~
+- ~~Empty state~~
+- ~~Priority-based badge colors~~
 - Light modal animation
 - Better loading and error states
-
-## Notes
-
-This base project uses anonymous Firebase Auth. It does not include email/password login, email verification, drag-and-drop, Zustand, advanced Firestore security modeling, or complex forms yet.
 
 ---
 

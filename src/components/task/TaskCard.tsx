@@ -1,7 +1,8 @@
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
-import type { ActiveTaskStatus, Task, TaskPriority, TaskStatus } from "../../types/task";
+import { usePrioritySettings } from "../../hooks/usePrioritySettings";
+import type { ActiveTaskStatus, Task, TaskStatus } from "../../types/task";
 
 export interface TaskCardProps {
   onArchive: (taskId: string) => void;
@@ -10,23 +11,11 @@ export interface TaskCardProps {
   task: Task;
 }
 
-const priorityLabel: Record<TaskPriority, string> = {
-  low: "Low",
-  medium: "Medium",
-  high: "High",
-};
-
 const statusLabel: Record<TaskStatus, string> = {
   todo: "Todo",
   in_progress: "In Progress",
   done: "Done",
   backlog: "Backlog",
-};
-
-const priorityVariant: Record<TaskPriority, "neutral" | "warning" | "danger"> = {
-  low: "neutral",
-  medium: "warning",
-  high: "danger",
 };
 
 const statusVariant: Record<TaskStatus, "neutral" | "info" | "success"> = {
@@ -37,6 +26,9 @@ const statusVariant: Record<TaskStatus, "neutral" | "info" | "success"> = {
 };
 
 export function TaskCard({ onArchive, onEdit, onStatusChange, task }: TaskCardProps) {
+  const { prioritySettings } = usePrioritySettings();
+  const prioritySetting = prioritySettings[task.priority];
+
   return (
     <Card className="p-4">
       <div className="space-y-3">
@@ -52,7 +44,7 @@ export function TaskCard({ onArchive, onEdit, onStatusChange, task }: TaskCardPr
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Badge variant={priorityVariant[task.priority]}>{priorityLabel[task.priority]}</Badge>
+          <Badge variant={prioritySetting.variant}>{prioritySetting.label}</Badge>
           <Badge variant={statusVariant[task.status]}>{statusLabel[task.status]}</Badge>
         </div>
 

@@ -1,4 +1,5 @@
 import { Button } from "../ui/Button";
+import { usePrioritySettings } from "../../hooks/usePrioritySettings";
 import type {
   TaskFilterPriority,
   TaskFilterStatus,
@@ -26,9 +27,9 @@ const statusOptions: Array<{ label: string; value: TaskFilterStatus }> = [
 
 const priorityOptions: Array<{ label: string; value: TaskFilterPriority }> = [
   { label: "All priorities", value: "all" },
-  { label: "Low", value: "low" },
-  { label: "Medium", value: "medium" },
-  { label: "High", value: "high" },
+  { label: "low", value: "low" },
+  { label: "medium", value: "medium" },
+  { label: "high", value: "high" },
 ];
 
 const sortDirectionOptions: Array<{ label: string; value: TaskSortDirection }> = [
@@ -45,6 +46,8 @@ export function TaskFiltersPanel({
   sort,
   totalCount,
 }: TaskFiltersPanelProps) {
+  const { prioritySettings } = usePrioritySettings();
+
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,1.5fr)_repeat(3,minmax(0,1fr))_auto] xl:items-end">
@@ -86,7 +89,7 @@ export function TaskFiltersPanel({
           >
             {priorityOptions.map((option) => (
               <option key={option.value} value={option.value}>
-                {option.label}
+                {option.value === "all" ? option.label : prioritySettings[option.value].label}
               </option>
             ))}
           </select>

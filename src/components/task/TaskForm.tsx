@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
+import { usePrioritySettings } from "../../hooks/usePrioritySettings";
 import type { Task, TaskFormValues, TaskPriority, TaskStatus } from "../../types/task";
 
 export interface TaskFormProps {
@@ -34,11 +35,7 @@ const statusOptions: Array<SelectOption<TaskStatus>> = [
   { label: "Done", value: "done" },
 ];
 
-const priorityOptions: Array<SelectOption<TaskPriority>> = [
-  { label: "Low", value: "low" },
-  { label: "Medium", value: "medium" },
-  { label: "High", value: "high" },
-];
+const priorityValues: TaskPriority[] = ["low", "medium", "high"];
 
 function getInitialValues(initialTask?: Task): TaskFormValues {
   if (!initialTask) {
@@ -92,6 +89,7 @@ function getFieldClassName(hasError: boolean): string {
 }
 
 export function TaskForm({ initialTask, onCancel, onSubmit }: TaskFormProps) {
+  const { prioritySettings } = usePrioritySettings();
   const [values, setValues] = useState<TaskFormValues>(() => getInitialValues(initialTask));
   const [touchedFields, setTouchedFields] = useState<TouchedFields>({});
   const isEditing = Boolean(initialTask);
@@ -219,9 +217,9 @@ export function TaskForm({ initialTask, onCancel, onSubmit }: TaskFormProps) {
               onChange={(event) => updateField("priority", event.target.value as TaskPriority)}
               value={values.priority}
             >
-              {priorityOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
+              {priorityValues.map((priority) => (
+                <option key={priority} value={priority}>
+                  {prioritySettings[priority].label}
                 </option>
               ))}
             </select>

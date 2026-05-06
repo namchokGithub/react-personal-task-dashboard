@@ -3,17 +3,13 @@ import { EmptyState } from "../components/ui/EmptyState";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
+import { usePrioritySettings } from "../hooks/usePrioritySettings";
 import { useTasks } from "../hooks/useTasks";
-import type { Task, TaskPriority } from "../types/task";
-
-const priorityLabel: Record<TaskPriority, string> = {
-  low: "Low",
-  medium: "Medium",
-  high: "High",
-};
+import type { Task } from "../types/task";
 
 export function BacklogPage() {
   const { deleteTask, error, isLoading, restoreTask, tasks } = useTasks();
+  const { prioritySettings } = usePrioritySettings();
   const [taskToDelete, setTaskToDelete] = useState<Task | undefined>();
   const backlogTasks = tasks.filter((task) => task.status === "backlog");
 
@@ -62,7 +58,7 @@ export function BacklogPage() {
                     </p>
                   ) : null}
                   <p className="mt-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-                    Priority: {priorityLabel[task.priority]}
+                    Priority: {prioritySettings[task.priority].label}
                     {task.dueDate ? ` · Due ${task.dueDate}` : ""}
                   </p>
                 </div>
@@ -82,9 +78,12 @@ export function BacklogPage() {
               </div>
             </Card>
           ))
-        ) : (
-          <EmptyState title="No backlog tasks" description="Archived tasks will appear here." />
-        )}
+        ) : !isLoading ? (
+          <EmptyState
+            description="Tasks moved from the active board will appear here."
+            title="No backlog tasks"
+          />
+        ) : null}
       </div>
 
       <ConfirmDialog
