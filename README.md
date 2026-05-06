@@ -1,18 +1,21 @@
 # Personal Task Dashboard
 
-A beginner-friendly base project for a personal task management dashboard built with Vite, React, TypeScript, Tailwind CSS, React Router, and localStorage.
+A beginner-friendly base project for a personal task management dashboard built with Vite, React, TypeScript, Tailwind CSS, React Router, and Firebase Firestore.
 
-This project is intentionally a foundation, not a fully completed task app yet. It focuses on clean structure, reusable components, typed task data, basic routing, mock data, and localStorage persistence so future features can be added safely.
+This project is intentionally a foundation, not a fully completed task app yet. It focuses on clean structure, reusable components, typed task data, basic routing, Firebase Auth, and Firestore persistence so future features can be added safely.
 
 ## Features
 
 - Dashboard summary cards
 - Kanban-ready task board
 - Tasks grouped by status
-- Mock task data
-- localStorage task persistence
+- Firestore task persistence
+- Realtime task loading with Firestore snapshots
+- Anonymous Firebase Auth for Firestore rules
 - Basic task CRUD
 - Change task status
+- Move tasks to backlog instead of deleting from the active board
+- Permanent delete from the backlog page
 - Search tasks by title
 - Filter tasks by status and priority
 - Sort tasks by due date
@@ -28,12 +31,15 @@ This project is intentionally a foundation, not a fully completed task app yet. 
 - Phase 2: State + CRUD - completed
 - Phase 3: Stronger TypeScript - completed
 - Phase 4: Filter / Search / Sort - completed
-- Phase 5 and later - prepared for future improvements
+- Phase 5: Firestore persistence - completed
+- Phase 6: Routing - completed
+- Phase 7 and later - prepared for future improvements
 
 ## Current Pages
 
 - `/dashboard` - task summary cards for total, completed, pending, and upcoming due tasks
 - `/tasks` - simple Kanban-style board with Todo, In Progress, and Done columns
+- `/backlog` - archived tasks with restore and permanent delete actions
 - `/settings` - placeholder for future app settings
 - `/` - redirects to `/dashboard`
 
@@ -44,7 +50,8 @@ This project is intentionally a foundation, not a fully completed task app yet. 
 - TypeScript
 - Tailwind CSS
 - React Router
-- localStorage
+- Firebase Auth
+- Firebase Firestore
 - pnpm
 
 ## Project Structure
@@ -55,9 +62,10 @@ src/
 │   ├── layout/
 │   ├── task/
 │   └── ui/
-├── data/
 ├── hooks/
+├── lib/
 ├── pages/
+├── services/
 ├── types/
 ├── utils/
 ├── App.tsx
@@ -91,12 +99,55 @@ Preview the production build:
 pnpm preview
 ```
 
+## Firebase Setup
+
+Create a Firebase project, register a Web app, enable Firestore Database, and enable Anonymous Authentication in the Firebase console.
+
+Firebase Console setup:
+
+- Authentication -> Sign-in method -> Anonymous -> Enable
+- Firestore Database -> Rules -> allow authenticated users for the `tasks` collection
+
+Then create a local `.env` file from `.env.example`:
+
+```bash
+cp .env.example .env
+```
+
+Fill in the Firebase Web app config values:
+
+```bash
+VITE_FIREBASE_API_KEY=
+VITE_FIREBASE_AUTH_DOMAIN=
+VITE_FIREBASE_PROJECT_ID=
+VITE_FIREBASE_STORAGE_BUCKET=
+VITE_FIREBASE_MESSAGING_SENDER_ID=
+VITE_FIREBASE_APP_ID=
+VITE_FIREBASE_MEASUREMENT_ID=
+```
+
+The app uses the `tasks` Firestore collection as the source of truth. Add, edit, status changes, backlog moves, restore actions, and permanent deletes write directly to Firestore.
+
+Recommended development Firestore rules:
+
+```js
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /tasks/{taskId} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+```
+
 ## Important Files
 
 - `src/types/task.ts` - task types and future-friendly filter/sort types
-- `src/data/mockTasks.ts` - starter mock task data
-- `src/hooks/useTasks.ts` - task state and localStorage persistence
-- `src/utils/storage.ts` - safe localStorage helpers
+- `src/lib/firebase.ts` - Firebase app, Auth, and Firestore initialization
+- `src/services/taskService.ts` - Firestore task read/write helpers
+- `src/hooks/useTasks.ts` - task state, Firestore subscription, and CRUD actions
 - `src/utils/taskUtils.ts` - simple dashboard summary helpers
 - `src/components/task/` - Kanban board, columns, and task cards
 - `src/components/layout/` - app shell, sidebar, and header
@@ -107,7 +158,6 @@ pnpm preview
 The structure is prepared for adding:
 
 - Dark mode
-- Firebase or mock API integration
 - Drag-and-drop Kanban
 
 ## Roadmap
@@ -120,7 +170,7 @@ Build the UI first without complex logic.
 - Sidebar / Navbar
 - Task Card
 - Dashboard Card
-- Render mock data with `.map()`
+- Render task data with `.map()`
 
 ### Phase 2: State + CRUD
 
@@ -151,12 +201,13 @@ Practice frontend data logic.
 - Filter by priority
 - Sort by due date
 
-### Phase 5: localStorage
+### Phase 5: Firestore
 
-Keep task data after refreshing the browser.
+Keep task data after refreshing the browser by saving it remotely.
 
-- Load initial data from localStorage
-- Save tasks whenever data changes
+- Load initial data from Firestore
+- Save task changes to Firestore
+- Listen for realtime task updates
 
 ### Phase 6: Routing
 
@@ -164,6 +215,7 @@ Add multiple pages with `react-router-dom`.
 
 - `/dashboard`
 - `/tasks`
+- `/backlog`
 - `/settings`
 
 ### Phase 7: Polish UI
@@ -179,7 +231,7 @@ Improve the interface and interaction details with Tailwind CSS.
 
 ## Notes
 
-This base project does not include authentication, backend integration, full CRUD, drag-and-drop, Zustand, Firebase, or complex forms yet.
+This base project uses anonymous Firebase Auth. It does not include email/password login, email verification, drag-and-drop, Zustand, advanced Firestore security modeling, or complex forms yet.
 
 ---
 

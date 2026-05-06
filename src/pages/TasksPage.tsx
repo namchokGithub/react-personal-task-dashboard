@@ -3,6 +3,7 @@ import { KanbanBoard } from "../components/task/KanbanBoard";
 import { TaskFiltersPanel } from "../components/task/TaskFiltersPanel";
 import { TaskForm } from "../components/task/TaskForm";
 import { Button } from "../components/ui/Button";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { useTasks } from "../hooks/useTasks";
 import type { Task, TaskFilters, TaskSort, UpdateTaskInput } from "../types/task";
 import { filterAndSortTasks } from "../utils/taskUtils";
@@ -19,9 +20,19 @@ const defaultSort: TaskSort = {
 };
 
 export function TasksPage() {
-  const { addTask, changeTaskStatus, deleteTask, resetTasks, tasks, updateTask } = useTasks();
+  const {
+    addTask,
+    archiveAllTasks,
+    archiveTask,
+    changeTaskStatus,
+    error,
+    isLoading,
+    tasks,
+    updateTask,
+  } = useTasks();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | undefined>();
+  const [pendingFormValues, setPendingFormValues] = useState<UpdateTaskInput | undefined>();
   const [filters, setFilters] = useState<TaskFilters>(defaultFilters);
   const [sort, setSort] = useState<TaskSort>(defaultSort);
 
@@ -43,13 +54,26 @@ export function TasksPage() {
   }
 
   function handleSubmit(values: UpdateTaskInput) {
-    if (editingTask) {
-      updateTask(editingTask.id, values);
-    } else {
-      addTask(values);
+    setPendingFormValues(values);
+  }
+
+  async function confirmSaveTask() {
+    if (!pendingFormValues) {
+      return;
     }
 
+    if (editingTask) {
+      await updateTask(editingTask.id, pendingFormValues);
+    } else {
+      await addTask(pendingFormValues);
+    }
+
+    setPendingFormValues(undefined);
     closeForm();
+  }
+
+  function cancelSaveTask() {
+    setPendingFormValues(undefined);
   }
 
   function resetFilters() {
@@ -69,14 +93,26 @@ export function TasksPage() {
 
         <div className="flex flex-col gap-2 sm:flex-row">
           <Button onClick={openAddForm}>Add task</Button>
-          <Button onClick={resetTasks} variant="secondary">
-            Reset mock tasks
+          <Button onClick={archiveAllTasks} variant="secondary">
+            Move all to backlog
           </Button>
         </div>
       </div>
 
       {isFormOpen ? (
         <TaskForm initialTask={editingTask} onCancel={closeForm} onSubmit={handleSubmit} />
+      ) : null}
+
+      {error ? (
+        <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          {error}
+        </div>
+      ) : null}
+
+      {isLoading ? (
+        <div className="rounded-lg border border-slate-200 bg-white px-4 py-6 text-sm text-slate-500 shadow-sm">
+          Loading tasks from Firestore...
+        </div>
       ) : null}
 
       <TaskFiltersPanel
@@ -90,10 +126,23 @@ export function TasksPage() {
       />
 
       <KanbanBoard
-        onDeleteTask={deleteTask}
+        onArchiveTask={archiveTask}
         onEditTask={openEditForm}
         onStatusChange={changeTaskStatus}
         tasks={visibleTasks}
+      />
+
+      <ConfirmDialog
+        confirmLabel={editingTask ? "Save changes" : "Add task"}
+        description={
+          editingTask
+            ? "Confirm that you want to save these changes to Firestore."
+            : "Confirm that you want to create this task in Firestore."
+        }
+        isOpen={Boolean(pendingFormValues)}
+        onCancel={cancelSaveTask}
+        onConfirm={confirmSaveTask}
+        title={editingTask ? "Save task changes?" : "Add this task?"}
       />
     </div>
   );

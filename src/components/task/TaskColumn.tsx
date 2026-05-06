@@ -1,18 +1,18 @@
 import { EmptyState } from "../ui/EmptyState";
 import { TaskCard } from "./TaskCard";
-import type { Task, TaskStatus } from "../../types/task";
+import type { ActiveTaskStatus, Task } from "../../types/task";
 
 export interface TaskColumnProps {
-  onDeleteTask: (taskId: string) => void;
+  onArchiveTask: (taskId: string) => void;
   onEditTask: (task: Task) => void;
-  onStatusChange: (taskId: string, status: TaskStatus) => void;
+  onStatusChange: (taskId: string, status: ActiveTaskStatus) => void;
   title: string;
-  status: TaskStatus;
+  status: ActiveTaskStatus;
   tasks: Task[];
 }
 
 export function TaskColumn({
-  onDeleteTask,
+  onArchiveTask,
   onEditTask,
   onStatusChange,
   title,
@@ -35,7 +35,7 @@ export function TaskColumn({
           columnTasks.map((task) => (
             <TaskCard
               key={task.id}
-              onDelete={onDeleteTask}
+              onArchive={onArchiveTask}
               onEdit={onEditTask}
               onStatusChange={onStatusChange}
               task={task}

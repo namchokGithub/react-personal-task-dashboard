@@ -1,21 +1,21 @@
 import { TaskColumn } from "./TaskColumn";
-import type { Task, TaskStatus } from "../../types/task";
+import type { ActiveTaskStatus, Task } from "../../types/task";
 
 export interface KanbanBoardProps {
-  onDeleteTask: (taskId: string) => void;
+  onArchiveTask: (taskId: string) => void;
   onEditTask: (task: Task) => void;
-  onStatusChange: (taskId: string, status: TaskStatus) => void;
+  onStatusChange: (taskId: string, status: ActiveTaskStatus) => void;
   tasks: Task[];
 }
 
-const columns: Array<{ title: string; status: TaskStatus }> = [
+const columns: Array<{ title: string; status: ActiveTaskStatus }> = [
   { title: "Todo", status: "todo" },
   { title: "In Progress", status: "in_progress" },
   { title: "Done", status: "done" },
 ];
 
 export function KanbanBoard({
-  onDeleteTask,
+  onArchiveTask,
   onEditTask,
   onStatusChange,
   tasks,
@@ -25,7 +25,7 @@ export function KanbanBoard({
       {columns.map((column) => (
         <TaskColumn
           key={column.status}
-          onDeleteTask={onDeleteTask}
+          onArchiveTask={onArchiveTask}
           onEditTask={onEditTask}
           onStatusChange={onStatusChange}
           status={column.status}
