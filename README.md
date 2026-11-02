@@ -1,5 +1,8 @@
 # Personal Task Dashboard
 
+[!NOTE]
+Project Status: No Longer Maintained
+
 A beginner-friendly base project for a personal task management dashboard built with Vite, React, TypeScript, Tailwind CSS, React Router, and Firebase Firestore.
 
 This project is intentionally a foundation, not a fully completed task app yet. It focuses on clean structure, reusable components, typed task data, basic routing, Firebase Auth, and Firestore persistence so future features can be added safely.
